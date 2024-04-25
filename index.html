@@ -1,0 +1,139 @@
+<!-- index.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat App</title>
+  <style>
+    #messages {
+      list-style-type: none;
+      margin: 0;
+      padding: 0;
+    }
+    #messages li {
+      padding: 5px 10px;
+    }
+    #messages li:nth-child(odd) {
+      background: #eee;
+    }
+  </style>
+</head>
+<body>
+  <ul id="messages"></ul>
+  <input id="messageInput" autocomplete="off" /><button id="sendButton">Send</button>
+     <br>
+     <br> 
+     <br>
+
+  <form action="/upload"  enctype="multipart/form-data" method="post">
+    text====================<input name="textf" type="text"><br>
+    file====================<input name="filetoupload" type="file"><br>
+    <button type="submit">submit</button>
+  </form>
+
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+
+    document.getElementById('sendButton').addEventListener('click', function() {
+      const messageInput = document.getElementById('messageInput');
+      const message = messageInput.value;
+      socket.emit('chat message', message);
+      messageInput.value = '';
+    });
+
+    socket.on('chat message', function(msg) {
+      const messages = document.getElementById('messages');
+      const li = document.createElement('li');
+      li.textContent = msg;
+      messages.appendChild(li);
+    });
+  </script>
+</body>
+</html> -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Video Call</title>
+  <style>
+    #localVideo, #remoteVideo {
+      width: 320px;
+      height: 240px;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Video Call</h1>
+  
+  <!-- Video elements for local and remote streams -->
+  <video id="localVideo" autoplay muted></video>
+  <video id="remoteVideo" autoplay></video>
+  
+  <!-- Buttons for starting/joining the call -->
+  <button id="startCall">Start Call</button>
+  <button id="joinCall">Join Call</button>
+  
+  <!-- Script to handle video call functionality -->
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io(); // Connect to the server
+    
+    // Get references to video elements
+    const localVideo = document.getElementById('localVideo');
+    const remoteVideo = document.getElementById('remoteVideo');
+    
+    // Get references to buttons
+    const startCallButton = document.getElementById('startCall');
+    const joinCallButton = document.getElementById('joinCall');
+    
+    // Start call button click event handler
+    startCallButton.addEventListener('click', () => {
+      startCallButton.disabled = true;
+      navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+        .then(stream => {
+          localVideo.srcObject = stream;
+          socket.emit('offer', { type: 'offer', sdp: '...' }); // Send offer to server
+        })
+        .catch(error => {
+          console.error('Error accessing media devices:', error);
+        });
+    });
+    
+    // Join call button click event handler
+    joinCallButton.addEventListener('click', () => {
+      joinCallButton.disabled = true;
+      navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+        .then(stream => {
+          localVideo.srcObject = stream;
+          socket.emit('answer', { type: 'answer', sdp: '...' }); // Send answer to server
+        })
+        .catch(error => {
+          console.error('Error accessing media devices:', error);
+        });
+    });
+    
+    // Socket event handlers for offer, answer, and ICE candidates
+    socket.on('offer', offer => {
+      // Handle offer from server
+      // Set remote video srcObject to received stream
+      remoteVideo.srcObject = offer.stream;
+    });
+    
+    socket.on('answer', answer => {
+      // Handle answer from server
+      // Set remote video srcObject to received stream
+      remoteVideo.srcObject = answer.stream;
+    });
+    
+    socket.on('iceCandidate', iceCandidate => {
+      // Handle ICE candidate from server
+      // Add ICE candidate to peer connection
+    });
+  </script>
+</body>
+</html>
